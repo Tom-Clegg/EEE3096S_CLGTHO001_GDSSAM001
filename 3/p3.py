@@ -13,6 +13,7 @@ BuzzerPwm = None        #
 LEDPwm = None           #
 score = 0               #
 name = ""               #
+count = 0
 
 
 # DEFINE THE PINS USED HERE
@@ -71,7 +72,7 @@ def display_scores(count, raw_data):
     # print out the scores in the required format
     raw_data.sort(key=lambda x: x[1])
     for i in range(3):
-        print("{} - {} took {} guessess".format(str(i+1), raw_data[i][0], str(raw_data[i][1])))
+        print(str(i+1)+" - " + raw_data[i][0]+ " took "+str(raw_data[i][1])+" guesses\r")
     pass
 
 
@@ -113,7 +114,7 @@ def fetch_scores():
     score_count = eeprom.read_byte(0)
     scores = eeprom.read_block(1,4*score_count)
     # Get the scores
-    global name,score
+    global name, score
     # convert the codes back to ascii
     for i in range(len(scores)):
         if (i+1)%4 != 0:
@@ -123,18 +124,18 @@ def fetch_scores():
     for I in range(0, score_count*4-1, 4):
         ZeroTwoArray.append([scores[I-4]+scores[I-3]+scores[I-2],scores[I-1]])    
     # return back the results
-    return score_count, ZeroToArray
+    return score_count, ZeroTwoArray
 
 
 
 # Save high scores
 def save_scores():
-    global score,name
+    global score, name
     # fetch scores
     count, scores = fetch_scores()
     # include new score
     count += 1
-    eeprom.write_byte(0,count)
+    eeprom.write_byte(0, count)
     scores.append([name,score])
     print(scores)
     scores.sort(key=lambda x: x[1])
@@ -207,7 +208,7 @@ def btn_increase_pressed(channel):
 def btn_guess_pressed(channel):
     # If they've pressed and held the button, clear up the GPIO and take them back to the menu screen
     # Compare the actual value with the user value displayed on the LEDs
-    global number_displayed, number_correct, score, LEDPwm, BuzzerPwm
+    global number_displayed, number_correct, score, name, LEDPwm, BuzzerPwm
     LED_DutyCycle = 0
     currentlypressed = GPIO.input(btn_submit)
     if currentlypressed == 0:
@@ -246,7 +247,7 @@ def btn_guess_pressed(channel):
             GPIO.output(LED_value[1],GPIO.LOW)
             GPIO.output(LED_value[2],GPIO.LOW)
             # - tell the user and prompt them for a name
-            name = input("You guessed the correct number in " + str(score) + "guesses!\nPlease enter your name (3 characters only):\t")
+            name = input("You guessed the correct number in " + str(score) + " guesses!\nPlease enter your name (3 characters only): ")
             save_scores()
             GPIO.cleanup()
             setup()
